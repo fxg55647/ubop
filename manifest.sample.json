@@ -1,0 +1,186 @@
+{
+  "manifest_version": "1.0.0",
+  "ubop_version": "0.1.0-draft",
+
+  "provider": {
+    "id": "hertz.fi",
+    "name": "Hertz Finland",
+    "legal_name": "Hertz Finland Oy",
+    "website": "https://www.hertz.fi",
+    "logo_url": "https://www.hertz.fi/static/logo.png",
+    "categories": ["mobility", "travel", "car_rental"],
+    "locales": ["fi-FI", "en-US"],
+
+    "location": {
+      "country": "Finland",
+      "region": "Uusimaa",
+      "city": "Helsinki",
+      "address": "Lentokentäntie 1",
+      "latitude": 60.3172,
+      "longitude": 24.9633
+    }
+  },
+
+  "contact": {
+    "technical": {
+      "email": "tech@hertz.fi",
+      "url": "https://www.hertz.fi/dev/ubop"
+    },
+    "support": {
+      "email": "asiakaspalvelu@hertz.fi",
+      "phone": "+358-10-1234567"
+    },
+    "abuse": {
+      "email": "abuse@hertz.fi"
+    }
+  },
+
+  "channels": {
+    "email": {
+      "enabled": true,
+      "address": "ubop@hertz.fi",
+      "subject_prefix": "[UBOP]",
+      "format": "ubop-email-v1"
+    },
+    "https": {
+      "enabled": true,
+      "base_url": "https://api.hertz.fi/ubop",
+      "openapi_url": "https://api.hertz.fi/ubop/openapi.yaml",
+      "timeout_ms": 8000
+    }
+  },
+
+  "authentication": {
+    "mode": "none",
+    "notes": "UBOP requests accepted without authentication; rate limits apply."
+  },
+
+  "capabilities": {
+    "car_rental_quote": {
+      "enabled": true,
+      "description": "Get availability and price quotes for rental cars.",
+      "required_fields": [
+        "travel_segments[].from",
+        "travel_segments[].to",
+        "travel_segments[].departure_time",
+        "travel_segments[].arrival_time",
+        "party.total_guests"
+      ],
+      "optional_fields": [
+        "extras.insurance",
+        "extras.child_seat",
+        "extras.gps"
+      ]
+    },
+
+    "car_rental_booking": {
+      "enabled": true,
+      "description": "Create a confirmed car rental booking.",
+      "required_fields": [
+        "travel_segments[].from",
+        "travel_segments[].to",
+        "travel_segments[].departure_time",
+        "travel_segments[].arrival_time",
+        "customer.name",
+        "customer.email"
+      ],
+      "optional_fields": [
+        "payment.currency",
+        "extras.insurance",
+        "extras.gps"
+      ]
+    },
+
+    "ride_hail": {
+      "enabled": true,
+      "description": "Taxi / ride services through partner fleets (Helsinki region).",
+      "required_fields": [
+        "travel_segments[].from",
+        "travel_segments[].to",
+        "travel_segments[].departure_time"
+      ],
+      "optional_fields": [
+        "party.total_guests",
+        "extras.vehicle_type"
+      ]
+    },
+
+    "generic_booking": {
+      "enabled": true,
+      "description": "Reserve generic resources such as trailers, child seats, or EV chargers.",
+      "required_fields": [
+        "resources[].resource_type",
+        "resources[].resource_id",
+        "resources[].time_start",
+        "resources[].quantity"
+      ],
+      "optional_fields": [
+        "resources[].time_end",
+        "extras.*"
+      ]
+    },
+
+    "booking_modify": {
+      "enabled": true,
+      "description": "Modify an existing car rental booking.",
+      "required_fields": ["booking.id"]
+    },
+
+    "booking_cancel": {
+      "enabled": true,
+      "description": "Cancel an existing booking.",
+      "required_fields": ["booking.id"]
+    }
+  },
+
+  "policies": {
+    "cancellation": {
+      "free_cancellation_hours_before_pickup": 24,
+      "no_show_fee": "first_day_rental_price"
+    },
+    "payment": {
+      "accepted_methods": ["credit_card", "debit_card"],
+      "currency_default": "EUR"
+    },
+    "age_restrictions": {
+      "minimum_age": 21,
+      "surcharge_under_age": {
+        "threshold": 25,
+        "fee_per_day": 15
+      }
+    }
+  },
+
+  "validation": {
+    "mode": "strict",
+    "reject_unknown_fields": true,
+    "max_request_size_bytes": 65536
+  },
+
+  "rate_limits": {
+    "anonymous": {
+      "requests_per_minute": 30
+    },
+    "per_ip": {
+      "requests_per_minute": 120
+    }
+  },
+
+  "logging": {
+    "correlation_id_header": "X-Ubop-Correlation-Id",
+    "log_retention_days": 30,
+    "anonymization": {
+      "hash_ip_addresses": true,
+      "sensitive_fields": [
+        "customer.email",
+        "customer.phone"
+      ]
+    }
+  },
+
+  "metadata": {
+    "last_updated": "2025-12-01T12:00:00Z",
+    "status": "active",
+    "notes": "UBOP support is in beta. Breaking changes may occur."
+  }
+}
