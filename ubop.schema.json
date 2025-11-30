@@ -1,0 +1,437 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UBOP Message Schema",
+  "description": "Universal Booking Operation Protocol (UBOP) — unified schema for REQUEST, RESPONSE, CONFIRMATION and ERROR messages across travel, hospitality, dining, mobility and generic reservations.",
+  "type": "object",
+
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["REQUEST", "RESPONSE", "CONFIRMATION", "ERROR"],
+      "description": "Top-level UBOP message type."
+    },
+
+    "operation": {
+      "type": "string",
+      "description": "Semantic type of the operation, e.g. flight_quote, hotel_booking, restaurant_reservation, ride_hail, generic_booking."
+    },
+
+    "meta": {
+      "type": "object",
+      "description": "Technical metadata for tracing and validation.",
+      "properties": {
+        "ubop_version": { "type": "string" },
+        "message_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "correlation_id": { "type": "string" },
+        "provider_id": { "type": "string", "description": "Identifier of the provider (often the domain name)." },
+        "agent_id": { "type": "string", "description": "Identifier of the requesting agent/client." },
+        "strict_mode": { "type": "boolean", "description": "If true, unknown fields may be rejected." },
+        "signature": {
+          "type": "string",
+          "description": "Cryptographic signature of the message payload (optional in early versions)."
+        }
+      },
+      "required": ["ubop_version", "message_id", "timestamp"]
+    },
+
+    "context": {
+      "type": "object",
+      "description": "Optional contextual hints that may influence the booking decision.",
+      "properties": {
+        "locale": { "type": "string", "description": "BCP-47 locale, e.g. en-US, fi-FI." },
+        "currency": { "type": "string", "description": "Preferred currency, e.g. EUR, USD." },
+        "client_capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Capabilities of the agent or UI (e.g. supports_partial_confirmations, supports_vouchers)."
+        }
+      }
+    },
+
+    "data": {
+      "type": "object",
+      "description": "Domain-agnostic booking payload. Different operations use different subsets of these fields.",
+
+      "properties": {
+        "customer": {
+          "type": "object",
+          "description": "Primary customer making the booking.",
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string" },
+            "language": { "type": "string", "description": "Preferred language code, e.g. en, fi." }
+          }
+        },
+
+        "party": {
+          "type": "object",
+          "description": "Information about the entire party/group.",
+          "properties": {
+            "total_guests": { "type": "integer", "minimum": 1 },
+            "adults": { "type": "integer", "minimum": 0 },
+            "children": { "type": "integer", "minimum": 0 },
+            "infants": { "type": "integer", "minimum": 0 },
+            "special_needs": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Free-form descriptions of accessibility or other special needs."
+            },
+            "named_passengers": {
+              "type": "array",
+              "description": "Optional list of named passengers / guests.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string", "description": "e.g. adult, child, infant." }
+                }
+              }
+            }
+          }
+        },
+
+        "locations": {
+          "type": "object",
+          "description": "High-level locations for the overall booking.",
+          "properties": {
+            "start_location": {
+              "$ref": "#/$defs/location"
+            },
+            "end_location": {
+              "$ref": "#/$defs/location"
+            },
+            "via_locations": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/location" }
+            }
+          }
+        },
+
+        "travel_segments": {
+          "type": "array",
+          "description": "Segments of a journey (flights, trains, buses, ferries, taxis, etc.).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "segment_id": { "type": "string" },
+              "mode": {
+                "type": "string",
+                "description": "Mode of transport.",
+                "enum": ["flight", "train", "bus", "ferry", "taxi", "ride_hail", "rental_car", "other"]
+              },
+              "from": { "$ref": "#/$defs/location" },
+              "to": { "$ref": "#/$defs/location" },
+              "departure_time": { "type": "string", "format": "date-time" },
+              "arrival_time": { "type": "string", "format": "date-time" },
+              "carrier": {
+                "type": "object",
+                "description": "Transport operator, e.g. airline, rail company, taxi fleet.",
+                "properties": {
+                  "code": { "type": "string" },
+                  "name": { "type": "string" }
+                }
+              },
+              "service_class": {
+                "type": "string",
+                "description": "e.g. economy, premium_economy, business, first, standard, 1st_class"
+              },
+              "seat_request": {
+                "type": "object",
+                "description": "Requested seats for this segment.",
+                "properties": {
+                  "seat_numbers": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Explicit seat numbers, if known."
+                  },
+                  "seat_type": {
+                    "type": "string",
+                    "description": "e.g. window, aisle, middle, front, back."
+                  },
+                  "cabin_area_preference": {
+                    "type": "string",
+                    "description": "e.g. front, middle, rear, quiet_zone."
+                  }
+                }
+              },
+              "vehicle_type": {
+                "type": "string",
+                "description": "e.g. airplane, train, bus, taxi, car, ferry."
+              },
+              "fare_basis": { "type": "string" },
+              "booking_code": { "type": "string" }
+            }
+          }
+        },
+
+        "stays": {
+          "type": "array",
+          "description": "Hotel or lodging stays with rooms.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stay_id": { "type": "string" },
+              "property": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "id": { "type": "string" },
+                  "chain_code": { "type": "string" },
+                  "location": { "$ref": "#/$defs/location" }
+                }
+              },
+              "check_in_date": { "type": "string", "format": "date" },
+              "check_out_date": { "type": "string", "format": "date" },
+              "rooms": {
+                "type": "array",
+                "description": "One or more rooms reserved in this property.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "room_type": { "type": "string", "description": "Provider-specific room type code or name." },
+                    "room_count": { "type": "integer", "minimum": 1 },
+                    "occupants": { "type": "integer", "minimum": 1 },
+                    "bed_type": { "type": "string", "description": "e.g. twin, double, queen, king, bunk." },
+                    "smoking_preference": { "type": "string", "description": "e.g. non_smoking, smoking, no_preference." },
+                    "room_id": { "type": "string", "description": "Specific room identifier if already assigned." }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "tables": {
+          "type": "array",
+          "description": "Restaurant or bar reservations.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "reservation_id": { "type": "string" },
+              "restaurant": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "id": { "type": "string" },
+                  "location": { "$ref": "#/$defs/location" }
+                }
+              },
+              "datetime": { "type": "string", "format": "date-time" },
+              "guests": { "type": "integer", "minimum": 1 },
+              "area_preference": {
+                "type": "string",
+                "description": "e.g. window, terrace, bar, quiet."
+              },
+              "seating_type": {
+                "type": "string",
+                "description": "e.g. table, bar_counter, booth, outdoor."
+              },
+              "special_requests": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "dietary_restrictions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+
+        "resources": {
+          "type": "array",
+          "description": "Generic reservable resources (meeting rooms, event tickets, equipment, etc.).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "resource_type": { "type": "string", "description": "e.g. meeting_room, ticket, equipment, generic." },
+              "resource_id": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number", "minimum": 0 },
+              "time_start": { "type": "string", "format": "date-time" },
+              "time_end": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+
+        "extras": {
+          "type": "object",
+          "description": "Generic extras and options that may apply to any booking (luggage, insurance, breakfast, priority boarding, etc.).",
+          "additionalProperties": {
+            "type": ["string", "number", "boolean", "null", "object", "array"]
+          }
+        },
+
+        "payment": {
+          "type": "object",
+          "description": "Payment preferences or summary requested/used by the agent.",
+          "properties": {
+            "currency": { "type": "string" },
+            "amount_max": {
+              "type": "number",
+              "description": "Maximum acceptable total amount for a REQUEST, if applicable."
+            },
+            "payment_methods_allowed": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "e.g. credit_card, debit_card, cash_on_arrival, invoice, online_wallet."
+            }
+          }
+        },
+
+        "booking": {
+          "type": "object",
+          "description": "Existing booking reference for modify/cancel operations.",
+          "properties": {
+            "id": { "type": "string" },
+            "status": { "type": "string" },
+            "external_reference": { "type": "string" }
+          }
+        },
+
+        "notes": {
+          "type": "object",
+          "description": "Free-text notes.",
+          "properties": {
+            "customer_notes": { "type": "string" },
+            "agent_notes": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "result": {
+      "type": "object",
+      "description": "Result data for RESPONSE and CONFIRMATION messages.",
+      "properties": {
+        "success": { "type": "boolean" },
+        "booking_id": { "type": "string", "description": "Provider’s booking identifier for the overall transaction." },
+        "provider_confirmation_code": { "type": "string", "description": "Human-facing confirmation code shown to the customer." },
+        "price_total": { "type": "number" },
+        "currency": { "type": "string" },
+        "price_breakdown": {
+          "type": "array",
+          "description": "Optional detailed price breakdown by component.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "amount": { "type": "number" },
+              "currency": { "type": "string" },
+              "category": {
+                "type": "string",
+                "description": "e.g. base_fare, taxes, fees, extras, discount."
+              }
+            }
+          }
+        },
+        "reserved": {
+          "type": "object",
+          "description": "What was actually reserved and confirmed.",
+          "properties": {
+            "seats": {
+              "type": "array",
+              "description": "Concrete seat assignments (e.g. flights, trains).",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "segment_id": { "type": "string" },
+                  "seat_number": { "type": "string" },
+                  "cabin_class": { "type": "string" }
+                }
+              }
+            },
+            "rooms": {
+              "type": "array",
+              "description": "Concrete room assignments for stays.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "stay_id": { "type": "string" },
+                  "room_id": { "type": "string" },
+                  "room_type": { "type": "string" }
+                }
+              }
+            },
+            "tables": {
+              "type": "array",
+              "description": "Concrete table assignments for restaurants.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "reservation_id": { "type": "string" },
+                  "table_id": { "type": "string" },
+                  "area": { "type": "string" }
+                }
+              }
+            },
+            "resources": {
+              "type": "array",
+              "description": "Concrete resource reservations.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "resource_id": { "type": "string" },
+                  "resource_type": { "type": "string" },
+                  "quantity": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "estimated_hold_expiry": {
+          "type": "string",
+          "format": "date-time",
+          "description": "If the booking is a hold, when it expires unless confirmed."
+        }
+      }
+    },
+
+    "errors": {
+      "type": "array",
+      "description": "Errors for ERROR messages or unsuccessful RESPONSEs.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "field": { "type": "string", "description": "Dot-path to the offending field, if applicable." },
+          "retryable": { "type": "boolean" },
+          "details": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["code", "message"]
+      }
+    }
+  },
+
+  "required": ["type", "operation", "meta"],
+
+  "$defs": {
+    "location": {
+      "type": "object",
+      "description": "Generic location representation that works for flights, hotels, taxis, restaurants, etc.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "e.g. airport, train_station, bus_station, port, address, geo_point, generic."
+        },
+        "code": {
+          "type": "string",
+          "description": "Provider- or industry-specific code, e.g. IATA airport code, station code."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the location."
+        },
+        "address": {
+          "type": "string",
+          "description": "Free-form address string."
+        },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      }
+    }
+  }
+}
