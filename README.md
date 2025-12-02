@@ -1,4 +1,4 @@
-# UBOP — Universal Booking and Order Protocol
+# UBOP — Universal Booking Protocol
 
 Version: Archived  
 Status: No longer actively developed (superseded by OpenAI's Agentic Commerce Protocol)
