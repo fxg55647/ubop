@@ -1,0 +1,37 @@
+{
+  "type": "REQUEST",
+  "operation": "car_rental_quote",
+  "meta": {
+    "ubop_version": "0.1.0-draft",
+    "message_id": "REQ-10001",
+    "timestamp": "2025-12-02T09:00:00Z",
+    "correlation_id": "CORR-001",
+    "agent_id": "example.agent",
+    "strict_mode": true
+  },
+  "data": {
+    "party": {
+      "total_guests": 1
+    },
+    "travel_segments": [
+      {
+        "segment_id": "pickup",
+        "mode": "rental_car",
+        "from": {
+          "type": "address",
+          "name": "Helsinki Airport"
+        },
+        "to": {
+          "type": "address",
+          "name": "Helsinki Downtown"
+        },
+        "departure_time": "2025-12-04T09:00:00Z",
+        "arrival_time": "2025-12-10T10:00:00Z"
+      }
+    ],
+    "extras": {
+      "gps": true,
+      "child_seat": false
+    }
+  }
+}
