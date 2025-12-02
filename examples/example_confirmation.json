@@ -1,0 +1,20 @@
+{
+  "type": "CONFIRMATION",
+  "operation": "car_rental_booking",
+  "meta": {
+    "ubop_version": "0.1.0-draft",
+    "message_id": "CNF-30001",
+    "timestamp": "2025-12-02T09:01:00Z",
+    "correlation_id": "CORR-001",
+    "provider_id": "hertz.fi"
+  },
+  "confirmation": {
+    "booking_id": "HRZ-BKG-7771",
+    "status": "confirmed",
+    "price_total": 349.00,
+    "currency": "EUR",
+    "valid_from": "2025-12-04T09:00:00Z",
+    "valid_until": "2025-12-10T10:00:00Z",
+    "notes": "Please present your ID and driver's license at pickup."
+  }
+}
