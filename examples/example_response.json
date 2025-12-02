@@ -1,0 +1,24 @@
+{
+  "type": "RESPONSE",
+  "operation": "car_rental_quote",
+  "meta": {
+    "ubop_version": "0.1.0-draft",
+    "message_id": "RESP-20001",
+    "timestamp": "2025-12-02T09:00:01Z",
+    "correlation_id": "CORR-001",
+    "provider_id": "hertz.fi"
+  },
+  "result": {
+    "success": true,
+    "offers": [
+      {
+        "offer_id": "HRZ-OF-123",
+        "vehicle_class": "Compact",
+        "price_total": 349.00,
+        "currency": "EUR",
+        "description": "Compact class vehicle, unlimited mileage, basic insurance",
+        "provider_confirmation_code": "HRZ-239912"
+      }
+    ]
+  }
+}
