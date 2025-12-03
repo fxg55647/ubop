@@ -210,6 +210,6 @@ Continuing UBOP in parallel would have fragmented the landscape. For this reason
 
 License: Apache-2.0 (see LICENSE file)
 
-For questions, historical interest, or discussion about agent-to-business protocols, use GitHub Issues or Discussions.
+For questions, historical interest, or discussion about agent-to-business protocols, use GitHub Issues or Discussions or email me teemun.geemeili@gmail.com.
 
 End of README.
